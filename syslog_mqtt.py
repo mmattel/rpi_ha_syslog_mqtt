@@ -88,6 +88,28 @@ def on_disconnect(client, userdata, disconnect_flags, reason_code, properties = 
 def on_publish(client, userdata, message, reason_codes, properties = None) -> None:
 	print(f"MQTT messages published: {message}")
 
+def on_message(client, userdata, message) -> None:
+	# get the last retained message
+	global last_retained_message
+	global mqtt_state_topic
+	last_retained_message = message.payload
+	client.unsubscribe(mqtt_state_topic)
+
+def on_subscribe(client, userdata, mid, reason_code_list, properties = None) -> None:
+	# Since we subscribed only for a single channel, reason_code_list contains a single entry
+	if reason_code_list[0].is_failure:
+		print(f"Broker rejected you subscription: {reason_code_list[0]}")
+	else:
+		print(f"Broker granted the following QoS: {reason_code_list[0].value}")
+
+def on_unsubscribe(client, userdata, mid, reason_code_list, properties = None) -> None:
+	# Be careful, the reason_code_list is only present in MQTTv5.
+	if len(reason_code_list) == 0 or not reason_code_list[0].is_failure:
+		print("Unsubscribe succeeded")
+	else:
+		print(f"Broker replied with failure: {reason_code_list[0]}")
+	client.disconnect()
+
 def process_env() -> dict[str, str]:
 	# get all environment variables as dictionary
 	# https://pypi.org/project/python-dotenv/
@@ -128,7 +150,7 @@ def main() -> None:
 	mqtt_password:str  = mqtt_config['mqtt_password']
 	mqtt_client_id:str  = mqtt_config['mqtt_client_id']
 	mqtt_ha_topic:str  = 'homeassistant/sensor/' + mqtt_config['mqtt_topic']
-	mqtt_state_topic:str  = 'syslog/sensor/' + mqtt_config['mqtt_topic']
+	global mqtt_state_topic:str  = 'syslog/sensor/' + mqtt_config['mqtt_topic']
 	global mqtt_availability_topic:str  = 'syslog/sensor/' + mqtt_config['mqtt_topic'] + '/availability'
 
 	# MQTT qos values (http://www.steves-internet-guide.com/understanding-mqtt-qos-levels-part-1/)
@@ -150,6 +172,7 @@ def main() -> None:
 	addr = (server,port)
 
 	global connect_ok = None
+	global last_retained_message = None
 
 	# Open Socket for syslog messages
 	# https://realpython.com/python-sockets/
@@ -173,6 +196,9 @@ def main() -> None:
 				)
 	mqttclient.on_connect = on_connect
 	mqttclient.on_disconnect = on_disconnect
+	mqttclient.on_message = on_message
+	mqttclient.on_subscribe = on_subscribe
+	mqttclient.on_unsubscribe = on_unsubscribe
 	mqttclient.username_pw_set(mqtt_username, mqtt_password)
 	mqttclient.will_set(
 					mqtt_availability_topic,
@@ -187,7 +213,6 @@ def main() -> None:
 						# http://www.steves-internet-guide.com/mqtt-keep-alive-by-example/
 						# no need to set this value with paho-mqtt
 						# this avoids on the broker the following message pairs beling logged
-						# "Client solmate_mqtt closed its connection.
 						# "Client xyz closed its connection.
 						#keepalive = 70,
 						bind_address = '',
@@ -212,23 +237,28 @@ def main() -> None:
 		syslog.syslog(f'Could not open MQTT socket: {mqtt_server}:{mqtt_port}. Exiting')
 		sys.exit()
 
+	# get the last retained message if exists
+	mqttclient.subscribe(mqtt_state_topic)
+	print(last_retained_message)
+	print('got it !')
+
 	# update the home assistant auto config info
 	# each item needs its own publish
 	# name and config are arrays
 	# name contains the name for the config which is the full json string defining the message
 	name, config = sch.construct_ha_message(mqtt_config['mqtt_topic'], mqtt_availability_topic, mqtt_state_topic)
 
-	for i in range(0,len(name)): 
-		ha_topic_construct = mqtt_ha_topic + '/' + name[i] + '/config'
-		#print(str(i) + ' ' + ha_topic_construct)
-		#print(config[i])
-		mqttclient.publish(
-				ha_topic_construct,
-				payload = config[i],
-				qos = mqtt_qos,
-				retain = True,
-				properties = None
-			)
+#	for i in range(0,len(name)): 
+#		ha_topic_construct = mqtt_ha_topic + '/' + name[i] + '/config'
+#		#print(str(i) + ' ' + ha_topic_construct)
+#		#print(config[i])
+#		mqttclient.publish(
+#				ha_topic_construct,
+#				payload = config[i],
+#				qos = mqtt_qos,
+#				retain = True,
+#				properties = None
+#			)
 
 	#graceful_shutdown()
 

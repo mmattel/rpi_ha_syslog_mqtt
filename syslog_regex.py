@@ -18,7 +18,7 @@ def parse_syslog_message(message):
 	# the regex creates groups based on ontap 7 standard syslog messages
 	the_regex = r'<.+>(.+?(?=.\[))..(.+?(?=.\:).).(.*?)(\]:\s+)(\D)?(?(5)(.*$)|.+(up)(\s*)(.+?(?=,))(.+?(?=:).\d*.)(.*))'
 
-	target = [''] * 12			  # initaialize array with 12 empty elements 
+	target = [''] * 12				# initaialize array with 12 empty elements 
 	final = [''] * 8				# final array contains all info at the right locations
 
 	m = re.search(the_regex, message)
