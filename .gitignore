@@ -1,0 +1,3 @@
+# Copy the .env.example file, rename it to .env
+# and adapt the path to its location 
+.env
