@@ -8,10 +8,10 @@ import json
  #   message[5] # set the message
  #   message[6] # construct the complete message
 
-def construct_ha_message(mqtt_topic, mqtt_availability_topic, mqtt_state_topic):
+def construct_ha_message(mqtt_topic, mqtt_availability_topic, mqtt_state_topic) -> tuple[list[str], list[str]]:
 
-	config = ['']
-	name = ['']
+	config: list[str] = ['']	# json objects are strings
+	name:   list[str] = ['']
 
 	# https://www.home-assistant.io/integrations/sensor.mqtt/
 	# device_class: https://www.home-assistant.io/integrations/sensor/

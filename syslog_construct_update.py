@@ -8,7 +8,7 @@ import json
 #   message[5] # set the message
 #   message[6] # set the full message
 
-def construct_update_message(message):
+def construct_update_message(message) -> str:
 
 	construct = {
 		'date': message[0],
@@ -20,7 +20,7 @@ def construct_update_message(message):
 		'full': message[6],
 	}
 
-	final = json.dumps(construct)
+	final: str = json.dumps(construct) 	# json objects are strings
 
 	# print(json.dumps(construct, indent=4))
 

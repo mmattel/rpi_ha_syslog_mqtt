@@ -1,6 +1,6 @@
 # reject all messages which are not of interest (return False)
 
-def filter_syslog_message(message=''):
+def filter_syslog_message(message='') -> bool:
 
 	matches = [
 		'asup.smtp.drop',                 # autosupport mail was not sent for host
