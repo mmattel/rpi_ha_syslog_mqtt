@@ -4,6 +4,7 @@ Listen to syslog for patterns and write to MQTT
 
 Though this is specific for NetApp with ONTAP 7, it can be adapted for any other syslog/message source.
 
+* `git clone https://github.com/mmattel/rpi_ha_syslog_mqtt.git syslog_mqtt`
 * Copy the `.env.example` file, rename it to `.env` and configure it.
 * Copy the `syslog_mqtt.service` file to /etc/syslogd/syslog and adapt the path to the source.
 
