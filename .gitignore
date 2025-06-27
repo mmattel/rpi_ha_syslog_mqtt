@@ -1,3 +1,5 @@
-# Copy the .env.example file, rename it to .env
-# and adapt the path to its location 
+# Copy the .env.example file, rename it to .env and configure
+#
+# Copy the syslog_mqtt.service file to /etc/syslogd/syslog and adapt the path to the source
+#
 .env
